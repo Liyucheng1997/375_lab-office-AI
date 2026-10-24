@@ -1,5 +1,10 @@
 /* 表格应用样式（ss- 前缀） */
 
+/* 主体：左侧编辑栏 + 网格 + 工作表标签，右侧 AI 助手 */
+.ss-main { flex: 1; min-height: 0; display: flex; position: relative; }
+.ss-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ss-main > .ai-pane { margin: 8px 12px 8px 0; }
+
 /* 编辑栏：悬浮胶囊 */
 .ss-fbar { flex-shrink: 0; display: flex; align-items: flex-start; gap: 0; height: 36px; margin: 8px 12px 0; border-radius: 12px; background: var(--panel); box-shadow: var(--shadow-card); position: relative; z-index: 5; overflow: hidden; transition: height 0.3s var(--ease-out), box-shadow 0.2s; }
 .ss-fbar.expanded { height: 100px; }

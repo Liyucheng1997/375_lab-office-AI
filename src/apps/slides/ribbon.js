@@ -137,6 +137,7 @@ export function buildRibbon(E, ctx) {
 
   const rb = createRibbon({
     onFile: ctx.openBackstage,
+    onAI: () => E.toggleAI && E.toggleAI(),
     tabs: [
       {
         id: 'home', label: '开始', groups: [
@@ -433,6 +434,7 @@ export function buildRibbon(E, ctx) {
   return {
     el: rb.el,
     get: rb.get,
+    setAIActive: (on) => rb.setAIActive(on),
     sync(s) {
       const t = s.types;
       const draw = t.has('shape') || t.has('text') || t.has('line');

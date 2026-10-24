@@ -9,6 +9,7 @@ import { CHART_TYPES, defaultChartData, dataToText, textToData } from './chart.j
 import { startShow } from './slideshow.js';
 import { exportPptx, printDeck, exportPng } from './io.js';
 import { buildRibbon } from './ribbon.js';
+import { setupSlidesAI } from './ai.js';
 
 let CLIPBOARD = null; // { kind:'elements'|'slides', items, media, mark }
 let clipSystemOk = false;
@@ -2009,6 +2010,24 @@ export function createEditor(root, file, ctx) {
   E.sync = sync;
   E.state = () => ({ deck, cur, sel, editingId });
 
+  /* ---------------- AI 助手 ---------------- */
+  const ai = setupSlidesAI({
+    deck, E, ctx, layer,
+    change: (fn, opts) => change(() => {
+      const r = fn();
+      // 增删页后当前页可能越界，先收拢再重绘
+      cur = Math.max(0, Math.min(deck.slides.length - 1, cur));
+      slideSel = new Set([cur]);
+      return r;
+    }, opts),
+    goto: (i) => goto(i),
+    state: () => ({ cur, sel, editingId }),
+    onToggle: (on) => { ribbon.setAIActive(on); requestAnimationFrame(fit); setTimeout(fit, 320); },
+  });
+  body.append(ai.el);
+  E.toggleAI = () => ai.toggle();
+  root._slides = { ai, E }; // 便于调试
+
   /* ---------------- 初始化 ---------------- */
   renderAll();
   renderAnimPane();
@@ -2030,7 +2049,9 @@ export function createEditor(root, file, ctx) {
     getContent,
     onShow() { fit(); requestAnimationFrame(() => { fit(); renderThumbs(); }); setTimeout(fit, 60); },
     onHide() { if (editingId) exitEdit(); },
+    ai,
     destroy() {
+      ai.destroy();
       document.removeEventListener('keydown', onKey);
       document.removeEventListener('paste', onPaste);
       document.removeEventListener('selectionchange', onSelChange);

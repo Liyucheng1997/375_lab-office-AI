@@ -6,6 +6,7 @@ import { defaultPage } from './templates.js';
 import * as T from './table.js';
 import { buildRibbon } from './ribbon.js';
 import { createPanes } from './panes.js';
+import { setupWriterAI } from './ai.js';
 import './writer.css';
 
 const GAP = 18; // 页间距(px)
@@ -1776,13 +1777,25 @@ html, body { margin: 0; background: ${state.page.color || '#fff'}; -webkit-print
     const inTable = r && closestIn(r.startContainer, 'td,th');
     const link = closestIn(e.target, 'a');
     const hasSel = r && !r.collapsed;
-    const items = [
+    const items = [];
+    if (hasSel && E.ai) {
+      const ask = (p) => () => E.ai.open(p, { send: true });
+      items.push({ label: 'AI', icon: 'sparkles', items: [
+        { label: '润色', icon: 'wand-sparkles', onClick: ask('润色我选中的这段文字，让表达更流畅专业，保持原意，直接替换选中内容。') },
+        { label: '翻译成英文', icon: 'languages', onClick: ask('把我选中的内容翻译成地道的英文，直接替换选中内容。') },
+        { label: '翻译成中文', icon: 'languages', onClick: ask('把我选中的内容翻译成通顺的简体中文，直接替换选中内容。') },
+        { label: '扩写', icon: 'text-quote', onClick: ask('扩写我选中的内容，补充细节和论据，篇幅约为原来的两倍，直接替换选中内容。') },
+        { label: '精简', icon: 'list-checks', onClick: ask('精简我选中的内容，保留要点，篇幅压缩到一半左右，直接替换选中内容。') },
+        { label: '解释', icon: 'lightbulb', onClick: ask('解释一下我选中的这段内容是什么意思，不要修改文档。') },
+      ] }, '-');
+    }
+    items.push(
       { label: '剪切', icon: 'scissors', shortcut: 'Ctrl+X', disabled: !hasSel, onClick: () => run(() => exec('cut')) },
       { label: '复制', icon: 'copy', shortcut: 'Ctrl+C', disabled: !hasSel, onClick: () => exec('copy') },
       { label: '粘贴', icon: 'clipboard-paste', shortcut: 'Ctrl+V', onClick: () => pasteFromClipboard(false) },
       { label: '只粘贴文本', icon: 'clipboard-type', onClick: () => pasteFromClipboard(true) },
       '-',
-    ];
+    );
     if (selectedImg) {
       items.push(
         { label: '图片大小...', icon: 'scaling', onClick: imageSizeDialog },
@@ -1854,6 +1867,7 @@ html, body { margin: 0; background: ${state.page.color || '#fff'}; -webkit-print
     updatePage, customMargins, setColumns, watermarkDialog, headerFooterDialog, setPageNumber,
     setZoom, fitWidth, fitPage, setViewMode, setRuler, toggleSpell, print, stats, pasteFromClipboard,
     get pageCount() { return pageCount; }, paginate, zoomCtl,
+    setHTML, normalize, cleanHTML, topBlock, insertBlock, liveRange, afterChange,
     toggleNav: (v) => panes.toggleNav(v),
     fullscreen: () => { if (document.fullscreenElement) document.exitFullscreen(); else root.requestFullscreen?.(); },
   };
@@ -1862,6 +1876,8 @@ html, body { margin: 0; background: ${state.page.color || '#fff'}; -webkit-print
   E.ribbon = buildRibbon(E);
   root._writer = E; // 便于调试
 
+  E.ai = setupWriterAI(E);
+  body.append(E.ai.el);
   root.append(E.ribbon.el, body, statusbar);
   setHTML(file.content?.html);
   setRuler(state.view.ruler);
@@ -1879,7 +1895,8 @@ html, body { margin: 0; background: ${state.page.color || '#fff'}; -webkit-print
       E.syncRibbon && E.syncRibbon();
     },
     onHide() { E.cancelPainter(); },
-    destroy() { listeners.forEach((f) => f()); ro.disconnect(); },
+    destroy() { listeners.forEach((f) => f()); ro.disconnect(); E.ai.destroy(); },
+    ai: E.ai,
     print,
     exports: [
       { label: 'Word 文档 (.docx)', icon: 'file-text', desc: '可在 Microsoft Word / WPS 中打开编辑', run: (name) => exportDocx(getContent(), name) },

@@ -353,7 +353,7 @@ export function buildRibbon(E) {
     },
   ];
 
-  const rb = createRibbon({ tabs, onFile: E.ctx.openBackstage });
+  const rb = createRibbon({ tabs, onFile: E.ctx.openBackstage, onAI: () => E.ai?.toggle() });
 
   // 保证字体下拉框能显示文档中任意字体
   const fontSel = rb.get('fontName').el;

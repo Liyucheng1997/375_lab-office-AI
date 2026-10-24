@@ -451,7 +451,7 @@ export function buildRibbon(ed) {
     g.ensureVisible(rg.r1, rg.c1);
   }
 
-  const rb = createRibbon({ tabs, onFile: () => ed.ctx.openBackstage() });
+  const rb = createRibbon({ tabs, onFile: () => ed.ctx.openBackstage(), onAI: () => ed.ai && ed.ai.toggle() });
 
   let lastStyle = {};
   function sync(style = lastStyle, info = {}) {

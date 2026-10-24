@@ -1,5 +1,5 @@
 // 首页：问候 + 搜索胶囊、新建、模板横条、文档列表（最近/星标/回收站）、拖拽导入、流体背景。
-import { h, icon, toast, confirmBox, promptBox, contextMenu, showMenu } from '../core/ui.js';
+import { h, icon, toast, confirmBox, promptBox, contextMenu, showMenu, modal } from '../core/ui.js';
 import { APPS, loadApp, formatTime, formatSize } from '../core/apps.js';
 import * as store from '../core/store.js';
 import { createFluid } from './fluid.js';
@@ -13,7 +13,7 @@ function greeting() {
   return '晚上好';
 }
 
-export function mountHome(root, { openFile, newFile, importLocal }) {
+export function mountHome(root, { openFile, newFile, importLocal, newWithAI }) {
   let view = 'recent'; // recent | starred | trash
   let typeFilter = 'all';
   let tplFilter = 'all';
@@ -33,6 +33,7 @@ export function mountHome(root, { openFile, newFile, importLocal }) {
     h('div', { class: 'home-sub' }, h('b', null, '文字'), ' · ', h('b', null, '表格'), ' · ', h('b', null, '演示'), '　一切都安静地保存在你的浏览器里'));
   const searchBar = h('div', { class: 'home-search-wrap glass' },
     icon('search', 17), search, h('span', { class: 'kbd' }, '/'),
+    h('button', { class: 'search-ai', onclick: () => aiCreate() }, icon('sparkles', 15), 'AI 新建'),
     h('button', { class: 'search-open', onclick: () => importLocal() }, icon('arrow-up-from-line', 15), '打开文件'));
 
   /* 新建卡片 */
@@ -68,6 +69,31 @@ export function mountHome(root, { openFile, newFile, importLocal }) {
     h('div', { class: 'home-scroll' }, h('div', { class: 'home-inner' }, hero, searchBar, create, tplSec, docSec,
       h('div', { class: 'home-foot' }, '拖拽文件到此处即可导入 · Ctrl+O 打开本地文件 · Ctrl+S 保存'))),
     dropMask);
+
+  const AI_EXAMPLES = {
+    doc: ['写一份新产品上线的项目周报', '起草一封给客户的延期交付致歉信', '写一篇 800 字的"数字化转型"主题演讲稿'],
+    sheet: ['做一张 2026 年家庭月度收支表，带合计公式', '生成 20 名员工的工资表，含个税和实发工资公式', '做一个项目甘特进度表，12 个任务'],
+    slide: ['做一份 8 页的年度工作总结 PPT', '为"智能家居新品"做产品发布会演示文稿', '做一份 6 页的光合作用教学课件'],
+  };
+  async function aiCreate() {
+    let type = 'doc';
+    const ta = h('textarea', { class: 'input', rows: 4, placeholder: '描述你想要的文档，越具体越好…', style: 'width:100%' });
+    const ex = h('div', { class: 'ai-quick', style: 'justify-content:flex-start' });
+    const renderEx = () => ex.replaceChildren(...AI_EXAMPLES[type].map((t) => h('button', { class: 'ai-chip', type: 'button', onclick: () => { ta.value = t; ta.focus(); } }, t)));
+    const seg = h('div', { class: 'seg' }, Object.values(APPS).map((a) => h('button', { type: 'button', class: a.type === type ? 'active' : '', onclick: (e) => {
+      type = a.type;
+      seg.querySelectorAll('button').forEach((b) => b.classList.toggle('active', b === e.currentTarget));
+      renderEx();
+    } }, h('span', { class: 'tpl-dot', style: { background: a.color } }), a.name)));
+    renderEx();
+    const prompt = await modal({
+      title: 'AI 新建',
+      width: 520,
+      body: h('div', { class: 'form' }, seg, ta, h('div', { class: 'form-label' }, '试试这些'), ex),
+      buttons: [{ label: '取消', value: null }, { label: '开始生成', primary: true, onClick: () => ta.value.trim() || false }],
+    });
+    if (prompt) newWithAI(type, prompt);
+  }
 
   // "/" 聚焦搜索
   document.addEventListener('keydown', (e) => {

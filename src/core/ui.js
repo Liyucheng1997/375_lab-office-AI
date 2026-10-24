@@ -430,7 +430,7 @@ export async function formBox(title, fields, { width = 420, okLabel = '确定' }
  *   { type:'custom', el }
  * 返回 api：{ el, setActive(id,bool), setValue(id,v), setDisabled(id,bool), setColor(id,c), get(id), showTab(id), setTabVisible(id,bool) }
  */
-export function createRibbon({ tabs, onFile, accent, defaultTab } = {}) {
+export function createRibbon({ tabs, onFile, accent, defaultTab, onAI } = {}) {
   const registry = {};
   const tabBar = h('div', { class: 'ribbon-tabs' });
   const panelHost = h('div', { class: 'ribbon-panels' });
@@ -456,6 +456,12 @@ export function createRibbon({ tabs, onFile, accent, defaultTab } = {}) {
     panelHost.append(panel);
   }
   tabBar.append(h('div', { class: 'ribbon-spacer' }));
+  // AI 助手入口（应用传入 onAI 时显示）
+  let aiBtn = null;
+  if (onAI) {
+    aiBtn = h('button', { class: 'ribbon-ai', title: 'AI 助手 (Ctrl+J)', onmousedown: (e) => e.preventDefault(), onclick: onAI }, icon('sparkles', 15, { strokeWidth: 2 }), 'AI 助手');
+    tabBar.append(aiBtn);
+  }
   const collapseBtn = h('button', { class: 'ribbon-collapse', title: '折叠/展开功能区', onclick: () => toggleCollapse() }, icon('chevron-up', 14));
   tabBar.append(collapseBtn);
 
@@ -572,6 +578,8 @@ export function createRibbon({ tabs, onFile, accent, defaultTab } = {}) {
       if (!visible && current === id) api.showTab(tabs.find((x) => !x.hidden && !x.contextual).id);
     },
     get currentTab() { return current; },
+    /** AI 助手面板打开时高亮入口按钮 */
+    setAIActive(on) { if (aiBtn) aiBtn.classList.toggle('active', !!on); },
   };
   // 面板过宽时：滚轮横向滚动，两侧渐隐提示还有内容
   const updateFade = () => {

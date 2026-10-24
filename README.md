@@ -24,6 +24,15 @@ npm run preview    # 预览生产构建
 | 文字 | 类 Word 的页面视图、富文本排版、表格、图片、目录、页眉页脚、页面设置、导入 docx/txt/md/html，导出 docx/PDF/HTML/TXT/MD |
 | 表格 | Canvas 渲染的电子表格、公式引擎（80+ 函数）、格式、排序筛选、条件格式、图表、多工作表、导入 xlsx/csv，导出 xlsx/csv/PDF |
 | 演示 | 幻灯片编辑（文本/形状/图片/表格）、主题与版式、切换与动画、全屏放映、导入/导出 pptx、导出 PDF |
+| AI 助手 | 填写自己的 Claude API Key 后，在三个应用里用 AI 直接读写文档：写作改写、翻译总结、生成公式与图表、分析数据、一键生成整份演示文稿；首页"AI 新建"按描述生成文档 |
+
+## AI 助手
+
+- 点标题栏右侧的 ✦ 按钮或任意文档里的"AI 设置"，填写 [Claude API Key](https://console.anthropic.com/settings/keys)。Key 只保存在本机浏览器（localStorage），请求从浏览器直接发往 Anthropic，不经过其他服务器。
+- 默认模型 Claude Opus 5.5，可切换 Sonnet 5.5 / Haiku 5.5，或填写其他模型 ID；"思考强度"控制速度与质量的取舍。
+- 所在网络无法直连时，可在"高级：API 地址"填写兼容 Anthropic 接口的代理。
+- 文档里点功能区右上角"AI 助手"或按 `Ctrl+J` 打开侧边助手；AI 的每次修改都能用 `Ctrl+Z` 撤销。
+- 代码：`src/ai/`（设置、对话与工具调用循环、助手面板），各应用的工具在 `src/apps/*/ai.js`。
 
 ## 目录结构
 

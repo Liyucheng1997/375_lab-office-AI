@@ -3,6 +3,7 @@ import { h, icon, toast, confirmBox, promptBox, debounce, pickFile, showMenu } f
 import { APPS, loadApp, typeForFile, formatTime, formatSize } from './apps.js';
 import * as store from './store.js';
 import { mountHome } from '../home/home.js';
+import { openSettings as openAISettings, hasKey as aiHasKey } from '../ai/settings.js';
 
 const OPEN_KEY = 'office-open-tabs';
 const THEME_KEY = 'office-theme';
@@ -23,7 +24,7 @@ export function startShell(root) {
       h('span', { class: 'logo-mark' }, 'O'),
       h('span', { class: 'logo-text' }, h('b', null, 'Office'), h('small', null, '云办公'))),
     h('div', { class: 'tb-tabs-wrap' }, tabsEl),
-    h('div', { class: 'tb-right' }, newBtn, themeBtn));
+    h('div', { class: 'tb-right' }, h('button', { class: 'tb-round', title: 'AI 设置', onclick: () => openAISettings() }, icon('sparkles', 16)), newBtn, themeBtn));
   workspace = h('div', { class: 'workspace' });
   homePage = h('div', { class: 'page page-home active' });
   workspace.append(homePage);
@@ -31,7 +32,7 @@ export function startShell(root) {
 
   applyTheme(localStorage.getItem(THEME_KEY) || 'light');
 
-  home = mountHome(homePage, { openFile, newFile, importLocal });
+  home = mountHome(homePage, { openFile, newFile, importLocal, newWithAI });
   home.setActive(true);
 
   // 全局快捷键
@@ -42,6 +43,7 @@ export function startShell(root) {
     if (k === 's') { e.preventDefault(); if (activeId) saveNow(activeId, true); }
     else if (k === 'o' && !e.shiftKey) { e.preventDefault(); importLocal(); }
     else if (k === 'w' && e.altKey) { e.preventDefault(); if (activeId) closeTab(activeId); }
+    else if (k === 'j' && activeId) { e.preventDefault(); open.get(activeId)?.instance?.ai?.toggle(); }
   });
 
   window.addEventListener('beforeunload', (e) => {
@@ -92,6 +94,15 @@ function newMenu(anchor) {
 }
 
 /** 新建文件并打开 */
+/** 新建空白文档并让 AI 按描述生成内容 */
+export async function newWithAI(type, prompt) {
+  if (!aiHasKey()) { const s = await openAISettings(); if (!s?.apiKey) return; }
+  const file = await newFile(type, 'blank');
+  const o = open.get(file.id);
+  if (o?.instance?.ai) o.instance.ai.open(prompt, { send: true });
+  else toast('该应用暂不支持 AI 生成', 'error');
+}
+
 export async function newFile(type, templateId = 'blank', name) {
   const app = await loadApp(type);
   const tpl = app.templates.find((t) => t.id === templateId);
