@@ -2,7 +2,7 @@
 
 一个运行在浏览器里的 Office 全家桶：一个窗口里同时打开 **文字**、**表格**、**演示** 三类文档，用标签页切换。所有文档保存在浏览器本地（IndexedDB），不依赖后端服务。
 
-当前版本：**1.0.0**
+当前版本：**1.0.0** · 在线体验：<https://liyucheng1997.github.io/cloud-office/>（推送 main 后由 GitHub Actions 自动部署）
 
 界面采用苹果式简约设计语言：只用一个主题色（苹果蓝）加中性灰，纯色无渐变，白底大圆角卡片，胶囊控件，系统字体，支持深色模式。规范整理在 [.claude/skills/apple-minimal-design](.claude/skills/apple-minimal-design/SKILL.md)，可复用到其他项目。
 
